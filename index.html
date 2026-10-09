@@ -1,84 +1,265 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#4338ca">
-<title>StudyMate — Study Assistant</title>
-<style>
-:root{color-scheme:light}
-*{box-sizing:border-box}
-body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f3f4f6;color:#20243a;margin:0;padding:18px;line-height:1.5}
-main{max-width:720px;margin:0 auto}
-header{background:linear-gradient(135deg,#4338ca,#6d5ce8);color:#fff;padding:25px;border-radius:20px}
-header h1{margin:0 0 6px;font-size:2rem}
-header p{margin:0;opacity:.95}
-.card{background:#fff;padding:20px;border-radius:16px;margin-top:16px;box-shadow:0 4px 18px #20243a0d}
-label{display:block;font-weight:650;margin-top:12px}
-input,select,textarea,button{font:inherit;width:100%;padding:13px;margin-top:7px;border:1px solid #d5d8e2;border-radius:10px}
-textarea{resize:vertical}
-button{background:#4338ca;color:#fff;border:0;font-weight:700;cursor:pointer}
-button:focus,input:focus,select:focus,textarea:focus{outline:3px solid #c7d2fe;outline-offset:1px}
-#output{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.7}
-.note{color:#5b6075;font-size:.9rem}
-.pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-.pills span{background:#eeedff;color:#3730a3;padding:5px 10px;border-radius:99px;font-size:.85rem}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudyMate - AI Study Assistant</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f3f6fc;
+      color: #202944;
+    }
+    header {
+      background: #4f46e5;
+      color: white;
+      padding: 24px 16px;
+      text-align: center;
+    }
+    header h1 { margin: 0 0 8px; }
+    header p { margin: 0; }
+    main {
+      max-width: 850px;
+      margin: 24px auto;
+      padding: 0 16px;
+    }
+    .panel {
+      background: white;
+      padding: 22px;
+      margin-bottom: 20px;
+      border-radius: 14px;
+      box-shadow: 0 3px 14px #18264a10;
+    }
+    h2 { margin-top: 0; }
+    label {
+      display: block;
+      margin: 14px 0 8px;
+      font-weight: bold;
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ccd3e0;
+      border-radius: 8px;
+      font: inherit;
+    }
+    textarea { min-height: 160px; resize: vertical; }
+    button {
+      background: #4f46e5;
+      color: white;
+      border: 0;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin: 10px 6px 0 0;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    button:hover { background: #3730a3; }
+    .secondary { background: #e8eaff; color: #3730a3; }
+    .secondary:hover { background: #d9dcff; }
+    #output {
+      white-space: pre-wrap;
+      line-height: 1.7;
+      overflow-wrap: anywhere;
+    }
+    .hint { color: #626b80; font-size: 14px; }
+    footer { text-align: center; padding: 20px; color: #626b80; }
+  </style>
 </head>
 <body>
-<main>
-<header>
-<h1>StudyMate 📚</h1>
-<p>A simple study companion to help you review what you learn.</p>
-<div class="pills"><span>Learn</span><span>Summarize</span><span>Practise</span></div>
-</header>
+  <header>
+    <h1>📚 StudyMate</h1>
+    <p>Your simple study companion</p>
+  </header>
 
-<section class="card">
-<h2>Build a study guide</h2>
-<label for="topic">Topic or subject</label>
-<input id="topic" placeholder="e.g. Photosynthesis, algebra, Nepali history">
-<label for="mode">What would you like to do?</label>
-<select id="mode">
-<option value="explain">Make a learning plan</option>
-<option value="summary">Summarize my notes</option>
-<option value="quiz">Create practice prompts</option>
-<option value="flashcards">Make flashcards from notes</option>
-</select>
-<label for="notes">Your notes (optional for a learning plan)</label>
-<textarea id="notes" rows="6" placeholder="Paste your class notes here…"></textarea>
-<button id="studyBtn" type="button">Create study guide</button>
-<p class="note">This first version runs in your browser. It does not send your notes to a server and does not use an AI model yet.</p>
-</section>
+  <main>
+    <section class="panel">
+      <h2>📝 Your Study Notes</h2>
+      <label for="topic">Topic (optional)</label>
+      <input id="topic" placeholder="e.g. Photosynthesis">
 
-<section class="card" aria-live="polite">
-<h2>Your study guide</h2>
-<div id="output">Your result will appear here after you tap “Create study guide”.</div>
-</section>
-</main>
-<script>
-const $ = id => document.getElementById(id);
-function study(){
-  const topic = $('topic').value.trim();
-  const notes = $('notes').value.trim();
-  const mode = $('mode').value;
-  const out = $('output');
-  if(!topic && !notes){out.textContent='Please enter a topic or paste your notes first.';return;}
-  if(mode === 'summary'){
-    const text = notes || topic;
-    const sentences = text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [text];
-    out.textContent = 'SUMMARY\\n\\n' + sentences.slice(0,5).map(s=>s.trim()).filter(Boolean).join(' ');
-  } else if(mode === 'quiz'){
-    const text = notes || topic;
-    const chunks = text.split(/[.!?\\n]+/).map(s=>s.trim()).filter(s=>s.length>3);
-    out.textContent = 'PRACTICE PROMPTS\\n\\n' + (chunks.length ? chunks.slice(0,8).map((s,i)=>(i+1)+'. Explain this idea in your own words: “'+s+'”').join('\\n\\n') : '1. What are the key ideas about '+topic+'?\\n\\n2. Give an example.\\n\\n3. What is still unclear?') + '\\n\\nTry answering without looking at your notes.';
-  } else if(mode === 'flashcards'){
-    const chunks = (notes || topic).split(/[.!?\\n]+/).map(s=>s.trim()).filter(s=>s.length>3);
-    out.textContent = 'FLASHCARDS\\n\\n' + (chunks.length ? chunks.slice(0,8).map((s,i)=>'Card '+(i+1)+'\\nFront: What should I remember about this point?\\nBack: '+s).join('\\n\\n') : 'Add a few sentences of notes to make flashcards.');
-  } else {
-    out.textContent = 'TOPIC: '+(topic || 'Your notes')+'\\n\\nA study plan\\n1. Write down what you already know.\\n2. Break the topic into 3–5 smaller ideas.\\n3. Read your textbook or trusted class materials and note the main facts.\\n4. Explain each idea in your own words.\\n5. Test yourself using practice questions.\\n6. Review any answers you could not explain clearly.\\n\\nThis is a general study template, not an AI-generated explanation. Check factual details against your class materials.';
-  }
-}
-$('studyBtn').addEventListener('click', study);
-</script>
+      <label for="notes">Paste your notes here</label>
+      <textarea id="notes" placeholder="Paste your textbook notes or class notes here..."></textarea>
+      <p class="hint">Tip: Add a few sentences or paragraphs for better results.</p>
+
+      <button onclick="summarizeNotes()">Summarize Notes</button>
+      <button onclick="makePlan()">Make Study Plan</button>
+      <button onclick="makeQuiz()">Practice Questions</button>
+      <button class="secondary" onclick="clearAll()">Clear</button>
+    </section>
+
+    <section class="panel">
+      <h2>✨ Your Results</h2>
+      <div id="output">Your results will appear here.</div>
+      <button class="secondary" onclick="copyResult()">Copy Results</button>
+    </section>
+  </main>
+
+  <footer>StudyMate · Learn a little every day</footer>
+
+  <script>
+    function getNotes() {
+      return document.getElementById("notes").value.trim();
+    }
+
+    function getTopic() {
+      return document.getElementById("topic").value.trim() || "your topic";
+    }
+
+    function showResult(text) {
+      document.getElementById("output").textContent = text;
+    }
+
+    function getSentences(text) {
+      return (text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [])
+        .map(s => s.trim())
+        .filter(s => s.length > 0);
+    }
+
+    function words(text) {
+      return text.toLowerCase().match(/[a-z0-9'-]+/g) || [];
+    }
+
+    const commonWords = new Set([
+      "the","and","for","are","but","not","you","your","with","from",
+      "that","this","these","those","was","were","have","has","had",
+      "its","into","their","they","them","then","than","can","will",
+      "would","could","should","about","also","which","when","where",
+      "what","who","how","why","all","any","each","more","most","some",
+      "such","very","much","many","been","being","there","here","our",
+      "out","use","used","using","per","because","while","during","through",
+      "into","over","under","between","after","before","is","am","be",
+      "to","of","in","on","at","by","as","an","a","or","it","if"
+    ]);
+
+    function summarizeNotes() {
+      const text = getNotes();
+      if (!text) {
+        showResult("Please paste your notes first.");
+        return;
+      }
+
+      const sentences = getSentences(text);
+      if (sentences.length <= 2) {
+        showResult("Summary:\n\n" + text);
+        return;
+      }
+
+      const counts = {};
+      words(text).forEach(word => {
+        if (word.length > 2 && !commonWords.has(word)) {
+          counts[word] = (counts[word] || 0) + 1;
+        }
+      });
+
+      const scored = sentences.map((sentence, index) => {
+        const sentenceWords = words(sentence);
+        let score = 0;
+        sentenceWords.forEach(word => {
+          if (counts[word]) score += counts[word];
+        });
+        score = score / Math.max(sentenceWords.length, 1);
+        return { sentence, index, score };
+      });
+
+      const desiredCount = Math.max(2, Math.ceil(sentences.length * 0.35));
+      const selected = scored
+        .sort((a, b) => b.score - a.score)
+        .slice(0, Math.min(desiredCount, sentences.length))
+        .sort((a, b) => a.index - b.index);
+
+      const summary = selected.map(item => item.sentence).join(" ");
+
+      showResult(
+        "SUMMARY: " + getTopic() + "\n\n" +
+        summary +
+        "\n\nOriginal sentences: " + sentences.length +
+        "\nSummary sentences: " + selected.length +
+        "\n\nNote: This is an extractive summary made from your own text, not an AI-generated explanation."
+      );
+    }
+
+    function makePlan() {
+      const text = getNotes();
+      const topic = getTopic();
+      let result = "STUDY PLAN: " + topic + "\n\n";
+
+      if (text) {
+        const sentences = getSentences(text);
+        result += "Use these steps with your notes:\n\n";
+        result += "1. Read the notes once to understand the main idea.\n";
+        result += "2. Review these key points:\n";
+        sentences.slice(0, 5).forEach((s, i) => {
+          result += "   " + (i + 1) + ". " + s + "\n";
+        });
+        result += "\n3. Explain the key points in your own words.\n";
+        result += "4. Hide your notes and recall what you learned.\n";
+        result += "5. Review anything you could not remember.";
+      } else {
+        result += "1. Write down what you already know about " + topic + ".\n";
+        result += "2. Find reliable class materials about the topic.\n";
+        result += "3. Break the topic into smaller ideas.\n";
+        result += "4. Write a short explanation of each idea.\n";
+        result += "5. Test yourself without looking at your notes.\n";
+        result += "6. Review the parts you find difficult.";
+      }
+
+      showResult(result);
+    }
+
+    function makeQuiz() {
+      const text = getNotes();
+      if (!text) {
+        showResult("Please paste your notes first so I can create practice questions from them.");
+        return;
+      }
+
+      const sentences = getSentences(text)
+        .filter(s => words(s).length >= 5);
+
+      if (sentences.length === 0) {
+        showResult("Please paste a little more text, including full sentences.");
+        return;
+      }
+
+      const questions = sentences.slice(0, 5);
+      let result = "PRACTICE QUESTIONS: " + getTopic() + "\n\n";
+
+      questions.forEach((sentence, index) => {
+        result += (index + 1) + ". Explain this idea in your own words:\n";
+        result += sentence + "\n\n";
+      });
+
+      result += "BONUS:\nWrite down the three most important facts you learned.\n\n";
+      result += "These questions are based on your notes. Check your answers against your original materials.";
+
+      showResult(result);
+    }
+
+    function clearAll() {
+      document.getElementById("topic").value = "";
+      document.getElementById("notes").value = "";
+      showResult("Your results will appear here.");
+    }
+
+    async function copyResult() {
+      const text = document.getElementById("output").textContent;
+      try {
+        await navigator.clipboard.writeText(text);
+        alert("Results copied!");
+      } catch (error) {
+        const area = document.createElement("textarea");
+        area.value = text;
+        document.body.appendChild(area);
+        area.select();
+        document.execCommand("copy");
+        area.remove();
+        alert("Results copied!");
+      }
+    }
+  </script>
 </body>
 </html>
