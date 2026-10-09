@@ -1,1 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#4338ca">
+<title>StudyMate — Study Assistant</title>
+<style>
+:root{color-scheme:light}
+*{box-sizing:border-box}
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f3f4f6;color:#20243a;margin:0;padding:18px;line-height:1.5}
+main{max-width:720px;margin:0 auto}
+header{background:linear-gradient(135deg,#4338ca,#6d5ce8);color:#fff;padding:25px;border-radius:20px}
+header h1{margin:0 0 6px;font-size:2rem}
+header p{margin:0;opacity:.95}
+.card{background:#fff;padding:20px;border-radius:16px;margin-top:16px;box-shadow:0 4px 18px #20243a0d}
+label{display:block;font-weight:650;margin-top:12px}
+input,select,textarea,button{font:inherit;width:100%;padding:13px;margin-top:7px;border:1px solid #d5d8e2;border-radius:10px}
+textarea{resize:vertical}
+button{background:#4338ca;color:#fff;border:0;font-weight:700;cursor:pointer}
+button:focus,input:focus,select:focus,textarea:focus{outline:3px solid #c7d2fe;outline-offset:1px}
+#output{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.7}
+.note{color:#5b6075;font-size:.9rem}
+.pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.pills span{background:#eeedff;color:#3730a3;padding:5px 10px;border-radius:99px;font-size:.85rem}
+</style>
+</head>
+<body>
+<main>
+<header>
+<h1>StudyMate 📚</h1>
+<p>A simple study companion to help you review what you learn.</p>
+<div class="pills"><span>Learn</span><span>Summarize</span><span>Practise</span></div>
+</header>
 
+<section class="card">
+<h2>Build a study guide</h2>
+<label for="topic">Topic or subject</label>
+<input id="topic" placeholder="e.g. Photosynthesis, algebra, Nepali history">
+<label for="mode">What would you like to do?</label>
+<select id="mode">
+<option value="explain">Make a learning plan</option>
+<option value="summary">Summarize my notes</option>
+<option value="quiz">Create practice prompts</option>
+<option value="flashcards">Make flashcards from notes</option>
+</select>
+<label for="notes">Your notes (optional for a learning plan)</label>
+<textarea id="notes" rows="6" placeholder="Paste your class notes here…"></textarea>
+<button id="studyBtn" type="button">Create study guide</button>
+<p class="note">This first version runs in your browser. It does not send your notes to a server and does not use an AI model yet.</p>
+</section>
+
+<section class="card" aria-live="polite">
+<h2>Your study guide</h2>
+<div id="output">Your result will appear here after you tap “Create study guide”.</div>
+</section>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+function study(){
+  const topic = $('topic').value.trim();
+  const notes = $('notes').value.trim();
+  const mode = $('mode').value;
+  const out = $('output');
+  if(!topic && !notes){out.textContent='Please enter a topic or paste your notes first.';return;}
+  if(mode === 'summary'){
+    const text = notes || topic;
+    const sentences = text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [text];
+    out.textContent = 'SUMMARY\\n\\n' + sentences.slice(0,5).map(s=>s.trim()).filter(Boolean).join(' ');
+  } else if(mode === 'quiz'){
+    const text = notes || topic;
+    const chunks = text.split(/[.!?\\n]+/).map(s=>s.trim()).filter(s=>s.length>3);
+    out.textContent = 'PRACTICE PROMPTS\\n\\n' + (chunks.length ? chunks.slice(0,8).map((s,i)=>(i+1)+'. Explain this idea in your own words: “'+s+'”').join('\\n\\n') : '1. What are the key ideas about '+topic+'?\\n\\n2. Give an example.\\n\\n3. What is still unclear?') + '\\n\\nTry answering without looking at your notes.';
+  } else if(mode === 'flashcards'){
+    const chunks = (notes || topic).split(/[.!?\\n]+/).map(s=>s.trim()).filter(s=>s.length>3);
+    out.textContent = 'FLASHCARDS\\n\\n' + (chunks.length ? chunks.slice(0,8).map((s,i)=>'Card '+(i+1)+'\\nFront: What should I remember about this point?\\nBack: '+s).join('\\n\\n') : 'Add a few sentences of notes to make flashcards.');
+  } else {
+    out.textContent = 'TOPIC: '+(topic || 'Your notes')+'\\n\\nA study plan\\n1. Write down what you already know.\\n2. Break the topic into 3–5 smaller ideas.\\n3. Read your textbook or trusted class materials and note the main facts.\\n4. Explain each idea in your own words.\\n5. Test yourself using practice questions.\\n6. Review any answers you could not explain clearly.\\n\\nThis is a general study template, not an AI-generated explanation. Check factual details against your class materials.';
+  }
+}
+$('studyBtn').addEventListener('click', study);
+</script>
+</body>
+</html>
